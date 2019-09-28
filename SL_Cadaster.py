@@ -218,7 +218,7 @@ class SLCadaster:
             QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
             
             line_Dxf = self.dlg.lineEdit.text()
-	    db=os.path.expanduser('~\\.qgis2\\python\\plugins\\ParcelChecker\\qgis.dbf')
+	    db=os.path.expanduser('~\\.qgis2\\python\\plugins\\SLCadaster\\qgis.dbf')
             outputs_QGISEXPLODELINES_1=processing.runalg('qgis:explodelines', line_Dxf,None)
             outputs_GRASS7VCLEAN_1=processing.runalg('grass7:v.clean', outputs_QGISEXPLODELINES_1['OUTPUT'] ,1,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
             outputs_GRASS7VCLEAN_2=processing.runalg('grass7:v.clean', outputs_GRASS7VCLEAN_1['output'],0,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
