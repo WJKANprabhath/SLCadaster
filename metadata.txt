@@ -14,10 +14,10 @@ version=0.1
 author=Prabhath W.J.K.A.N. Survey Dept. of Sri Lanka
 email=npjasinghe@gmail.com
 
-about=This tool lets you find the error polygons that have no labels, technically not closed polygons. The parcels without lot number will be highlited with yelow colour and datails of the plan can be seen in the auto genarated text file in your DXF folder as xxxxxxxxReport01. And the second part of the tool lets you compare the extent of Lots in TL and programm computed extent of your plan. If there any extent difference exist, it can be seen in the auto genarated text file in your DXF folder as xxxxxxxxReport02. Please read the guidelines before run the tool.
+about=This tool lets you prepare high quality and accurate cadaster plan for [Land Information System](http://www.it.survey.gov.lk/nsdi/lis/index_cad.php) of Sri Lanka Survey Department. When you run this tool, you will be clearly guided through the use of error or warning messages while auto generated text files gives you the details report of the plan.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/WJKANprabhath/SLCadaster/issues
+repository=https://github.com/WJKANprabhath/SLCadaster
 # End of mandatory metadata
 
 # Recommended items:
@@ -28,7 +28,7 @@ repository=http://repo
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=http://homepage
+homepage=https://github.com/WJKANprabhath/SLCadaster/wiki
 category=Plugins
 icon=icon.png
 # experimental flag
