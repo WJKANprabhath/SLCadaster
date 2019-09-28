@@ -14,10 +14,12 @@ version=0.1
 author=Prabhath W.J.K.A.N. Survey Dept. of Sri Lanka
 email=npjasinghe@gmail.com
 
-about=This tool lets you prepare high quality and accurate cadaster plan for Land Information System
-      (http://www.it.survey.gov.lk/nsdi/lis/index_cad.php) of Sri Lanka Survey Department. 
-      When you run this tool, you will be clearly guided through the use of error or warning messages 
-      while auto generated text files gives you the details report of the plan.
+about=This tool lets you prepare high quality and accurate cadaster plan for 
+      Land Information System (http://www.it.survey.gov.lk/nsdi/lis/index_cad.php) 
+      of Sri Lanka Survey Department. 
+      When you run this tool, you will be clearly guided 
+      through the use of error or warning messages 
+      while auto generated text files gives you the detail report of the plan.
 
 tracker=https://github.com/WJKANprabhath/SLCadaster/issues
 repository=https://github.com/WJKANprabhath/SLCadaster
