@@ -457,7 +457,7 @@ class SLCadaster:
                                     QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
                             else:
                                 diff=str(countTL-count1)
-                                QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n \nUnable to complete the task...!!\n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
+                                QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n\n - - - - - - - - - - - Hint - - - - - - - - - \nYou may have use some boundry lines in wrong layer or dange error(check topology)  \n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
                                 cLayer = self.iface.mapCanvas().currentLayer()
                                 cLayer.removeSelection()
                                 outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
