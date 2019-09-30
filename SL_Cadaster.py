@@ -270,174 +270,227 @@ class SLCadaster:
                 QMessageBox.information(window,"Info", "Warning...!!!\n \nNumber of "+str(count_Blocks)+" lines available in the blocks. \n\n - - - - - - - - - - - Hint - - - - - - - - - \nExplode the DXF and match that layer again\nThen re do the process")
             else:            
                 outputs_QGISPOLYGONIZE_1=processing.runalg('qgis:polygonize', cLayer,False,True,None)
-                outputs_QGISPOINTONSURFACE_1=processing.runandload('qgis:pointonsurface', line_Dxf,None)
-                cLayer = iface.mapCanvas().currentLayer()
-                expr = QgsExpression( " \"Layer\" is 'LOTNO'" )
-                it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                ids = [i.id() for i in it]
-                cLayer.setSelectedFeatures( ids )
-                count_LOTNO_Layer=len(ids)
-                #QMessageBox.information(window,"Info", "Warning...!!!\n"+str(count_LOTNO_Layer)+"create the 'LOTNO' layer and ajust the lot numbers.")
-                
-                if count_LOTNO_Layer==0:
-                    QMessageBox.information(window,"Info", "Warning...!!!\n \nPlease create the 'LOTNO' layer and redo the process.")
-                else:                    
-                    expr = QgsExpression( " \"Layer\" is not 'LOTNO'" )
+                vlayer = QgsVectorLayer(outputs_QGISPOLYGONIZE_1['OUTPUT'], "Ports layer", "ogr")
+                POLYGONIZE=vlayer.featureCount() 
+                if POLYGONIZE<1:
+                    QMessageBox.information(window,"Info", "Warning...!!!\n \nThere is a topology error or some boundary lines are in wrong layer.")
+                else:                  
+                    outputs_QGISPOINTONSURFACE_1=processing.runandload('qgis:pointonsurface', line_Dxf,None)
+                    cLayer = iface.mapCanvas().currentLayer()
+                    expr = QgsExpression( " \"Layer\" is 'LOTNO'" )
                     it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
                     ids = [i.id() for i in it]
                     cLayer.setSelectedFeatures( ids )
-                    cLayer.startEditing()
-                    for fid in ids:
-                        cLayer.deleteFeature(fid)
-                    cLayer.commitChanges()
-                    outputs_QGISJOINATTRIBUTESBYLOCATION_1=processing.runandload('qgis:joinattributesbylocation', outputs_QGISPOLYGONIZE_1['OUTPUT'],cLayer,['contains'],0.0,0,'sum,mean,min,max,median',1,None)
-                    b= r""+line_Dxf[:-4]+"Report01.txt"           
-                    file = open(b, 'w')
-                    cLayer = iface.mapCanvas().currentLayer()
-                    
-                    #------------------------------------------------------------------------
-                    cLayer = iface.mapCanvas().currentLayer()
-                    layer = self.iface.activeLayer()
-                    myfilepath= iface.activeLayer().dataProvider().dataSourceUri()                
+                    count_LOTNO_Layer=len(ids)
+                   
+                    if count_LOTNO_Layer==0:
+                        QMessageBox.information(window,"Info", "Warning...!!!\n \nPlease create the 'LOTNO' layer and redo the process.")
+                    else:                    
+                        expr = QgsExpression( " \"Layer\" is not 'LOTNO'" )
+                        it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                        ids = [i.id() for i in it]
+                        cLayer.setSelectedFeatures( ids )
+                        cLayer.startEditing()
+                        for fid in ids:
+                            cLayer.deleteFeature(fid)
+                        cLayer.commitChanges()
+                        outputs_QGISJOINATTRIBUTESBYLOCATION_1=processing.runandload('qgis:joinattributesbylocation', outputs_QGISPOLYGONIZE_1['OUTPUT'],cLayer,['contains'],0.0,0,'sum,mean,min,max,median',1,None)
+                        b= r""+line_Dxf[:-4]+"Report01.txt"           
+                        file = open(b, 'w')
+                        cLayer = iface.mapCanvas().currentLayer()
+                        
+                        #------------------------------------------------------------------------
+                        cLayer = iface.mapCanvas().currentLayer()
+                        layer = self.iface.activeLayer()
+                        myfilepath= iface.activeLayer().dataProvider().dataSourceUri()                
 
-                    outputs_QGISDISSOLVE_2=processing.runandload('qgis:dissolve', cLayer,False,'Text',None)
-                    layer = self.iface.activeLayer()
-                    myfilepath2= iface.activeLayer().dataProvider().dataSourceUri()                
-                    QgsMapLayerRegistry.instance().removeMapLayer(cLayer)
+                        outputs_QGISDISSOLVE_2=processing.runandload('qgis:dissolve', cLayer,False,'Text',None)
+                        layer = self.iface.activeLayer()
+                        myfilepath2= iface.activeLayer().dataProvider().dataSourceUri()                
+                        QgsMapLayerRegistry.instance().removeMapLayer(cLayer)
 
-                    outputs_QGISDISSOLVE_3=processing.runandload('qgis:dissolve', myfilepath,False,'Text',None)
+                        outputs_QGISDISSOLVE_3=processing.runandload('qgis:dissolve', myfilepath,False,'Text',None)
 
-                    #---- ---------------iface activity 03--------------------------------------
+                        #---- ---------------iface activity 03--------------------------------------
 
-                    cLayer = iface.mapCanvas().currentLayer()
-                    expr = QgsExpression( " \"Layer\" is NULL" )
-                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                    ids = [i.id() for i in it]
-                    cLayer.setSelectedFeatures( ids )
-                    cLayer.startEditing()
-                    for fid in ids:
-                        cLayer.deleteFeature(fid)
-                    cLayer.commitChanges()
+                        cLayer = iface.mapCanvas().currentLayer()
+                        expr = QgsExpression( " \"Layer\" is NULL" )
+                        it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                        ids = [i.id() for i in it]
+                        cLayer.setSelectedFeatures( ids )
+                        cLayer.startEditing()
+                        for fid in ids:
+                            cLayer.deleteFeature(fid)
+                        cLayer.commitChanges()
 
-                    feats_count = cLayer.featureCount()
-                    file.write('----------Processed result of the plan--------"\n')
-                    file.write('\nNo of Lots              ')
-                    file.write(str(feats_count))
-                    #-----------------------------------------------------------------------------------------
-                    cLayer = iface.mapCanvas().currentLayer()
-                    layer = self.iface.activeLayer()
-                    QgsMapLayerRegistry.instance().removeMapLayer(cLayer)
-                    cLayer = iface.mapCanvas().currentLayer()
-                    QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-                    cLayer = iface.mapCanvas().currentLayer()
-                    QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-                    layer = QgsVectorLayer(myfilepath,os.path.basename(line_Dxf[:-4]), 'ogr')
-                    QgsMapLayerRegistry.instance().addMapLayer(layer)
+                        feats_count = cLayer.featureCount()
+                        file.write('----------Processed result of the plan--------"\n')
+                        file.write('\nNo of Lots              ')
+                        file.write(str(feats_count))
+                        #-----------------------------------------------------------------------------------------
+                        cLayer = iface.mapCanvas().currentLayer()
+                        layer = self.iface.activeLayer()
+                        QgsMapLayerRegistry.instance().removeMapLayer(cLayer)
+                        cLayer = iface.mapCanvas().currentLayer()
+                        QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                        cLayer = iface.mapCanvas().currentLayer()
+                        QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                        layer = QgsVectorLayer(myfilepath,os.path.basename(line_Dxf[:-4]), 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer)
 
-                    #---- ---------------iface activity 05--------------------------------------
-                    cLayer = iface.mapCanvas().currentLayer()
-                    expr = QgsExpression(" \"area\" is 0")
-                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                    ids = [i.id() for i in it]
-                    cLayer.setSelectedFeatures( ids )
-                    cLayer.startEditing()
-                    for fid in ids:
-                        cLayer.deleteFeature(fid)
-                    cLayer.commitChanges()
+                        #---- ---------------iface activity 05--------------------------------------
+                        cLayer = iface.mapCanvas().currentLayer()
+                        expr = QgsExpression(" \"area\" is 0")
+                        it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                        ids = [i.id() for i in it]
+                        cLayer.setSelectedFeatures( ids )
+                        cLayer.startEditing()
+                        for fid in ids:
+                            cLayer.deleteFeature(fid)
+                        cLayer.commitChanges()
 
-                    count1=cLayer.featureCount()
-                    file.write('\nNo of Polygons          ')
-                    file.write(str(count1))
-                    expr = QgsExpression( " \"Text\" is NULL" )
-                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                    ids = [i.id() for i in it]
-                    cLayer.setSelectedFeatures( ids )
-                    count2=len(ids)
-                    file.write('\nNo of Polygons unloted  ')
-                    file.write(str(count2))
+                        count1=cLayer.featureCount()
+                        file.write('\nNo of Polygons          ')
+                        file.write(str(count1))
+                        expr = QgsExpression( " \"Text\" is NULL" )
+                        it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                        ids = [i.id() for i in it]
+                        cLayer.setSelectedFeatures( ids )
+                        count2=len(ids)
+                        file.write('\nNo of Polygons unloted  ')
+                        file.write(str(count2))
 
-                    if  str(count1 < count2):
-                        file.write ('\nPlease number the unloted lots and re do the processed ')
-                    now = datetime.datetime.now()
-                    date= str (now)
-                    a1= str (now.strftime("%Y-%m-%d"))
-                    file.write ("\nDate : "+ a1+"\n")
+                        if  str(count1 < count2):
+                            file.write ('\nPlease number the unloted lots and re do the processed ')
+                        now = datetime.datetime.now()
+                        date= str (now)
+                        a1= str (now.strftime("%Y-%m-%d"))
+                        file.write ("\nDate : "+ a1+"\n")
 
-                    file.write ('\n------------------------- R&D @ SGO ------------------------')
+                        file.write ('\n------------------------- R&D @ SGO ------------------------')
 
-                    file.close()
-                    layer = iface.activeLayer()
-                    layer.setCustomProperty("labeling", "pal")
-                    layer.setCustomProperty("labeling/enabled", "true")
-                    layer.setCustomProperty("labeling/fontFamily", "Arial")
-                    layer.setCustomProperty("labeling/fontSize", "10")
-                    layer.setCustomProperty("labeling/fieldName", "Text")
-                    layer.setCustomProperty("labeling/placement", "4")
-                    iface.mapCanvas().refresh()
-                    from PyQt4.QtGui import*
-                    window = iface.mainWindow()
-                    #QMessageBox.information(window,"Info", "Process complete....!\n \n (See the "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
-                    
-                    #-------------------------------------------------Step 2 ---------------------------------------------------------
-                    
-                    if count2>0:
-                        QMessageBox.information(window,"Info", "Warning....!\n \nNumber of "+str(count2)+" unloted polygons exist,\n \nUnable to check the extent difference with TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
-                    else:
-                        TL = self.dlg.lineEdit_2.text()
-                        layerTL = QgsVectorLayer(TL, 'testx', 'ogr')
-                        countTL=layerTL.featureCount()
-                        if len(TL)==0:
-                            QMessageBox.information(window,"Info", "Process complete....!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
-                            QMessageBox.information(window,"Info", "Warning....!\n \nYou did't select the TL. So progaramme will be terminated.")
+                        file.close()
+                        layer = iface.activeLayer()
+                        layer.setCustomProperty("labeling", "pal")
+                        layer.setCustomProperty("labeling/enabled", "true")
+                        layer.setCustomProperty("labeling/fontFamily", "Arial")
+                        layer.setCustomProperty("labeling/fontSize", "10")
+                        layer.setCustomProperty("labeling/fieldName", "Text")
+                        layer.setCustomProperty("labeling/placement", "4")
+                        iface.mapCanvas().refresh()
+                        from PyQt4.QtGui import*
+                        window = iface.mainWindow()
+                        #QMessageBox.information(window,"Info", "Process complete....!\n \n (See the "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
+                        
+                        #-------------------------------------------------Step 2 ---------------------------------------------------------
+                        
+                        if count2>0:
+                            QMessageBox.information(window,"Info", "Warning....!\n \nNumber of "+str(count2)+" unloted polygons exist,\n \nUnable to check the extent difference with TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
                         else:
-                            if count1==countTL:
+                            TL = self.dlg.lineEdit_2.text()
+                            layerTL = QgsVectorLayer(TL, 'testx', 'ogr')
+                            countTL=layerTL.featureCount()
+                            if len(TL)==0:
                                 QMessageBox.information(window,"Info", "Process complete....!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
+                                QMessageBox.information(window,"Info", "Warning....!\n \nYou did't select the TL. So progaramme will be terminated.")
+                            else:
+                                if count1==countTL:
+                                    QMessageBox.information(window,"Info", "Process complete....!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
 
-                                QMessageBox.information(window,"Info", "Great job ....!\n \n Unloted polygon not available,\n \n Now check the extent difference with TL")                                   
-                                cLayer = self.iface.mapCanvas().currentLayer()
-                                cLayer.removeSelection()
-                                outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
-                                outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDISSOLVE_1['OUTPUT'] ,'farea',0,10.0,3.0,True,'$area',None)
-                                outputs_QGISJOINATTRIBUTESTABLE_1=processing.runalg('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],TL,'Text','LotNo',None)
-                                outputs_QGISADDFIELDTOATTRIBUTESTABLE_1=processing.runalg('qgis:addfieldtoattributestable', outputs_QGISJOINATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',0,10.0,0.0,None)
-                                outputs_QGISFIELDCALCULATOR_1=processing.runandload('qgis:fieldcalculator', outputs_QGISADDFIELDTOATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',1,10.0,0.0,True,'abs("Extent"  *10000-"farea")',None)
+                                    QMessageBox.information(window,"Info", "Great job ....!\n \n Unloted polygon not available,\n \n Now check the extent difference with TL")                                   
+                                    cLayer = self.iface.mapCanvas().currentLayer()
+                                    cLayer.removeSelection()
+                                    outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
+                                    outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDISSOLVE_1['OUTPUT'] ,'farea',0,10.0,3.0,True,'$area',None)
+                                    outputs_QGISJOINATTRIBUTESTABLE_1=processing.runalg('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],TL,'Text','LotNo',None)
+                                    outputs_QGISADDFIELDTOATTRIBUTESTABLE_1=processing.runalg('qgis:addfieldtoattributestable', outputs_QGISJOINATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',0,10.0,0.0,None)
+                                    outputs_QGISFIELDCALCULATOR_1=processing.runandload('qgis:fieldcalculator', outputs_QGISADDFIELDTOATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',1,10.0,0.0,True,'abs("Extent"  *10000-"farea")',None)
 
-                                cLayer = iface.mapCanvas().currentLayer()
-                                layer = self.iface.activeLayer()
-                                myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
-                                QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-                                layer = QgsVectorLayer(myfilepath,"ExError", 'ogr')
-                                QgsMapLayerRegistry.instance().addMapLayer(layer)                   
-                                cLayer = iface.mapCanvas().currentLayer()
-                                b= r""+TL[:-5]+"Report02.txt"                    
-                                expr = QgsExpression("ex>-2 AND ex<2 ")
-                                it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                                ids = [i.id() for i in it]
-                                cLayer.setSelectedFeatures( ids )
-                                cLayer.startEditing()
-                                for fid in ids:
-                                    cLayer.deleteFeature(fid)
-                                cLayer.commitChanges()
-                                count=cLayer.featureCount()
-                                if count==0:
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    layer = self.iface.activeLayer()
+                                    myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
+                                    QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                                    layer = QgsVectorLayer(myfilepath,"ExError", 'ogr')
+                                    QgsMapLayerRegistry.instance().addMapLayer(layer)                   
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    b= r""+TL[:-5]+"Report02.txt"                    
+                                    expr = QgsExpression("ex>-2 AND ex<2 ")
+                                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                                    ids = [i.id() for i in it]
+                                    cLayer.setSelectedFeatures( ids )
+                                    cLayer.startEditing()
+                                    for fid in ids:
+                                        cLayer.deleteFeature(fid)
+                                    cLayer.commitChanges()
+                                    count=cLayer.featureCount()
+                                    if count==0:
+                                        file = open(b, 'w')
+                                        file.write('----------Report of Extent Matching result--------"\n')
+                                        file.write('\nLot No  Ex.Error(sq.m) \n')
+                                        file.write('\nCongratulation...!!!\n ')
+                                        file.write('\nThere is no extent errors\n ')
+                                        now = datetime.datetime.now()
+                                        date= str (now)
+                                        a1= str (now.strftime("%Y-%m-%d"))
+                                        file.write ("\nDate : "+ a1+"\n")
+                                        file.write ('\n------------------------- R&D @ SGO ------------------------')
+                                        file.close()
+                                        window = iface.mainWindow()
+                                        QMessageBox.information(window,"Info", "Cheers..! \n \nYour have make a perfect plan...!!!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
+                                   
+                                    else:                        
+                                        file = open(b, 'w')
+                                        file.write('----------Report of Extent Matching result--------"\n')
+                                        file.write('\nLot No  Ex.Error(sq.m) \n') 
+                                        feats = []
+                                        cLayer = iface.mapCanvas().currentLayer()
+                                        for feat in cLayer.getFeatures():
+                                            msgout = '%s,%s,%s\n' % (feat["Text"],"    ", feat["ex"])
+                                            unicode_message = msgout.encode('utf-8')
+                                            feats.append(unicode_message)     
+                                        feats.sort()
+                                        for item in feats:
+                                            file.write(item)
+                                        now = datetime.datetime.now()
+                                        date= str (now)
+                                        a1= str (now.strftime("%Y-%m-%d"))
+                                        file.write ("\nDate : "+ a1+"\n")
+                                        file.write ('\n------------------------- R&D @ SGO ------------------------')
+                                        file.close()
+                                        window = iface.mainWindow()
+                                        QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
+                                else:
+                                    diff=str(countTL-count1)
+                                    QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n\n - - - - - - - - - - - Hint - - - - - - - - - \nYou may have use some boundry lines in wrong layer or dange error(check topology)  \n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
+                                    cLayer = self.iface.mapCanvas().currentLayer()
+                                    cLayer.removeSelection()
+                                    outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
+
+                                    outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDISSOLVE_1['OUTPUT'] ,'farea',0,10.0,3.0,True,'$area',None)
+                                    outputs_QGISJOINATTRIBUTESTABLE_1=processing.runalg('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],TL,'Text','LotNo',None)
+                                    outputs_QGISADDFIELDTOATTRIBUTESTABLE_1=processing.runalg('qgis:addfieldtoattributestable', outputs_QGISJOINATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',0,10.0,0.0,None)
+                                    outputs_QGISFIELDCALCULATOR_1=processing.runandload('qgis:fieldcalculator', outputs_QGISADDFIELDTOATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',1,10.0,0.0,True,'abs("Extent"  *10000-"farea")',None)
+
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    layer = self.iface.activeLayer()
+                                    myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
+                                    QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                                    layer = QgsVectorLayer(myfilepath,"ExError", 'ogr')
+                                    QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                    b= r""+TL[:-5]+"Report02.txt" 
                                     file = open(b, 'w')
+                                    cLayer = iface.mapCanvas().currentLayer()
                                     file.write('----------Report of Extent Matching result--------"\n')
                                     file.write('\nLot No  Ex.Error(sq.m) \n')
-                                    file.write('\nCongratulation...!!!\n ')
-                                    file.write('\nThere is no extent errors\n ')
-                                    now = datetime.datetime.now()
-                                    date= str (now)
-                                    a1= str (now.strftime("%Y-%m-%d"))
-                                    file.write ("\nDate : "+ a1+"\n")
-                                    file.write ('\n------------------------- R&D @ SGO ------------------------')
-                                    file.close()
-                                    window = iface.mainWindow()
-                                    QMessageBox.information(window,"Info", "Cheers..! \n \nYour have make a perfect plan...!!!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
-                               
-                                else:                        
-                                    file = open(b, 'w')
-                                    file.write('----------Report of Extent Matching result--------"\n')
-                                    file.write('\nLot No  Ex.Error(sq.m) \n') 
+                                    expr = QgsExpression("ex>-2 AND ex<2 ")
+                                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                                    ids = [i.id() for i in it]
+                                    cLayer.setSelectedFeatures( ids )
+                                    cLayer.startEditing()
+                                    for fid in ids:
+                                        cLayer.deleteFeature(fid)
+                                    cLayer.commitChanges()
+                                    count=cLayer.featureCount()
                                     feats = []
                                     cLayer = iface.mapCanvas().currentLayer()
                                     for feat in cLayer.getFeatures():
@@ -455,57 +508,8 @@ class SLCadaster:
                                     file.close()
                                     window = iface.mainWindow()
                                     QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
-                            else:
-                                diff=str(countTL-count1)
-                                QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n\n - - - - - - - - - - - Hint - - - - - - - - - \nYou may have use some boundry lines in wrong layer or dange error(check topology)  \n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
-                                cLayer = self.iface.mapCanvas().currentLayer()
-                                cLayer.removeSelection()
-                                outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
 
-                                outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDISSOLVE_1['OUTPUT'] ,'farea',0,10.0,3.0,True,'$area',None)
-                                outputs_QGISJOINATTRIBUTESTABLE_1=processing.runalg('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],TL,'Text','LotNo',None)
-                                outputs_QGISADDFIELDTOATTRIBUTESTABLE_1=processing.runalg('qgis:addfieldtoattributestable', outputs_QGISJOINATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',0,10.0,0.0,None)
-                                outputs_QGISFIELDCALCULATOR_1=processing.runandload('qgis:fieldcalculator', outputs_QGISADDFIELDTOATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',1,10.0,0.0,True,'abs("Extent"  *10000-"farea")',None)
-
-                                cLayer = iface.mapCanvas().currentLayer()
-                                layer = self.iface.activeLayer()
-                                myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
-                                QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-                                layer = QgsVectorLayer(myfilepath,"ExError", 'ogr')
-                                QgsMapLayerRegistry.instance().addMapLayer(layer)
-                                b= r""+TL[:-5]+"Report02.txt" 
-                                file = open(b, 'w')
-                                cLayer = iface.mapCanvas().currentLayer()
-                                file.write('----------Report of Extent Matching result--------"\n')
-                                file.write('\nLot No  Ex.Error(sq.m) \n')
-                                expr = QgsExpression("ex>-2 AND ex<2 ")
-                                it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-                                ids = [i.id() for i in it]
-                                cLayer.setSelectedFeatures( ids )
-                                cLayer.startEditing()
-                                for fid in ids:
-                                    cLayer.deleteFeature(fid)
-                                cLayer.commitChanges()
-                                count=cLayer.featureCount()
-                                feats = []
-                                cLayer = iface.mapCanvas().currentLayer()
-                                for feat in cLayer.getFeatures():
-                                    msgout = '%s,%s,%s\n' % (feat["Text"],"    ", feat["ex"])
-                                    unicode_message = msgout.encode('utf-8')
-                                    feats.append(unicode_message)     
-                                feats.sort()
-                                for item in feats:
-                                    file.write(item)
-                                now = datetime.datetime.now()
-                                date= str (now)
-                                a1= str (now.strftime("%Y-%m-%d"))
-                                file.write ("\nDate : "+ a1+"\n")
-                                file.write ('\n------------------------- R&D @ SGO ------------------------')
-                                file.close()
-                                window = iface.mainWindow()
-                                QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
-
-                    
+                        
 							
             pass
  
