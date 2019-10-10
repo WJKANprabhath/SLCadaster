@@ -211,64 +211,65 @@ class SLCadaster:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            #-----clear
             cLayer = iface.mapCanvas().currentLayer()
             QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
             cLayer = iface.mapCanvas().currentLayer()
             QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-            
+            cLayer = iface.mapCanvas().currentLayer()
             line_Dxf = self.dlg.lineEdit.text()
 	    db=os.path.expanduser('~\\.qgis2\\python\\plugins\\SLCadaster\\qgis.dbf')
             outputs_QGISEXPLODELINES_1=processing.runalg('qgis:explodelines', line_Dxf,None)
-            outputs_GRASS7VCLEAN_1=processing.runalg('grass7:v.clean', outputs_QGISEXPLODELINES_1['OUTPUT'] ,1,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
-            outputs_GRASS7VCLEAN_2=processing.runalg('grass7:v.clean', outputs_GRASS7VCLEAN_1['output'],0,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
-            outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator', outputs_GRASS7VCLEAN_2['output'],'ex',0,10.0,4.0,True,'$length',None)
-            outputs_QGISJOINATTRIBUTESTABLE_1=processing.runandload('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],db,'layer','layer',None)
-      
-            #---- ---------------iface activity--------------------------------------
-            cLayer = iface.mapCanvas().currentLayer()
-            expr = QgsExpression("ex=0")
+            layer = QgsVectorLayer(outputs_QGISEXPLODELINES_1['OUTPUT'],'CM_Lot', 'ogr')
+            QgsMapLayerRegistry.instance().addMapLayer(layer)                        
+            cLayer = iface.mapCanvas().currentLayer()                            
+            expr = QgsExpression( "SubClasses='AcDbEntity:AcDbMInsertBlock' or SubClasses='AcDbEntity:AcDbBlockReference'" )
             it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
             ids = [i.id() for i in it]
             cLayer.setSelectedFeatures( ids )
-            cLayer.startEditing()
-            for fid in ids:
-                cLayer.deleteFeature(fid)
-            cLayer.commitChanges()
-
-            #---- ---------------iface activity 02--------------------------------------
-
-            cLayer = iface.mapCanvas().currentLayer()
-            expr = QgsExpression( " \"layer_2\" is NULL" )
-            it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-            ids = [i.id() for i in it]
-            cLayer.setSelectedFeatures( ids )
-            cLayer.startEditing()
-            for fid in ids:
-                cLayer.deleteFeature(fid)
-            cLayer.commitChanges()
-            #------------------
-            cLayer = iface.mapCanvas().currentLayer()
-            layer = self.iface.activeLayer()
-            myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
+            block_count=len(ids)
             QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
-            layer = QgsVectorLayer(myfilepath,os.path.basename(line_Dxf[:-4]), 'ogr')
-            QgsMapLayerRegistry.instance().addMapLayer(layer)
-            cLayer = iface.mapCanvas().currentLayer()
-            
-            expr = QgsExpression( " \"SubClasses\" is 'AcDbEntity:AcDbMInsertBlock'" )
-            it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
-            ids = [i.id() for i in it]
-            cLayer.setSelectedFeatures( ids )
-            count_Blocks=len(ids)
-
-            from PyQt4.QtGui import*
+            from PyQt4.QtGui import*    
             window = iface.mainWindow()
-            
-            
-            if count_Blocks>0:
-                QMessageBox.information(window,"Info", "Warning...!!!\n \nNumber of "+str(count_Blocks)+" lines available in the blocks. \n\n - - - - - - - - - - - Hint - - - - - - - - - \nExplode the DXF and match that layer again\nThen re do the process")
+            if block_count>0:
+                QMessageBox.information(window,"Info", "Warning...!!!\n \nRemove blocks before run\n\n - - - - - - - - - - - Hint - - - - - - - - - \nExplode the DXF and match that layer again\nThen re do the process")
+
             else:            
+                outputs_GRASS7VCLEAN_1=processing.runalg('grass7:v.clean', outputs_QGISEXPLODELINES_1['OUTPUT'] ,1,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
+                outputs_GRASS7VCLEAN_2=processing.runalg('grass7:v.clean', outputs_GRASS7VCLEAN_1['output'],0,0.001,('0,2000,0,2000'),-1.0,0.0001,None,None)
+                outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator', outputs_GRASS7VCLEAN_2['output'],'ex',0,10.0,4.0,True,'$length',None)
+                outputs_QGISDEFINECURRENTPROJECTION_1=processing.runalg('qgis:definecurrentprojection', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],'EPSG:5235')
+                outputs_QGISJOINATTRIBUTESTABLE_1=processing.runandload('qgis:joinattributestable', outputs_QGISDEFINECURRENTPROJECTION_1['OUTPUT'],db,'layer','layer',None)
+          
+                #---- ---------------iface activity--------------------------------------
+                cLayer = iface.mapCanvas().currentLayer()
+                expr = QgsExpression("ex=0")
+                it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                ids = [i.id() for i in it]
+                cLayer.setSelectedFeatures( ids )
+                cLayer.startEditing()
+                for fid in ids:
+                    cLayer.deleteFeature(fid)
+                cLayer.commitChanges()
+
+                #---- ---------------iface activity 02--------------------------------------
+
+                cLayer = iface.mapCanvas().currentLayer()
+                expr = QgsExpression( " \"layer_2\" is NULL" )
+                it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                ids = [i.id() for i in it]
+                cLayer.setSelectedFeatures( ids )
+                cLayer.startEditing()
+                for fid in ids:
+                    cLayer.deleteFeature(fid)
+                cLayer.commitChanges()
+                #------------------
+                cLayer = iface.mapCanvas().currentLayer()
+                layer = self.iface.activeLayer()
+                myfilepath= iface.activeLayer().dataProvider().dataSourceUri()
+                QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                layer = QgsVectorLayer(myfilepath,os.path.basename(line_Dxf[:-4]), 'ogr')
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
+                cLayer = iface.mapCanvas().currentLayer()           
                 outputs_QGISPOLYGONIZE_1=processing.runalg('qgis:polygonize', cLayer,False,True,None)
                 vlayer = QgsVectorLayer(outputs_QGISPOLYGONIZE_1['OUTPUT'], "Ports layer", "ogr")
                 POLYGONIZE=vlayer.featureCount() 
@@ -276,6 +277,7 @@ class SLCadaster:
                     QMessageBox.information(window,"Info", "Warning...!!!\n \nThere is a topology error or some boundary lines are in wrong layer.")
                 else:                  
                     outputs_QGISPOINTONSURFACE_1=processing.runandload('qgis:pointonsurface', line_Dxf,None)
+                    #outputs_GRASS7V_CLEAN_1=processing.runalg('grass7:v.clean', line_Dxf,0,0.1,None,-1.0,0.0001,None,None)
                     cLayer = iface.mapCanvas().currentLayer()
                     expr = QgsExpression( " \"Layer\" is 'LOTNO'" )
                     it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
@@ -284,7 +286,7 @@ class SLCadaster:
                     count_LOTNO_Layer=len(ids)
                    
                     if count_LOTNO_Layer==0:
-                        QMessageBox.information(window,"Info", "Warning...!!!\n \nPlease create the 'LOTNO' layer and redo the process.")
+                        QMessageBox.information(window,"Info", "Warning...!!!\n \nMissing the 'LOTNO' layer \n             or  \nextra points in the layout view\n\n - - - - - - - - - - - Hint - - - - - - - - - \n \nPlease create the 'LOTNO' layer and remove the layouts and redo the process.")
                     else:                    
                         expr = QgsExpression( " \"Layer\" is not 'LOTNO'" )
                         it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
@@ -378,10 +380,7 @@ class SLCadaster:
                         layer.setCustomProperty("labeling/fieldName", "Text")
                         layer.setCustomProperty("labeling/placement", "4")
                         iface.mapCanvas().refresh()
-                        from PyQt4.QtGui import*
-                        window = iface.mainWindow()
-                        #QMessageBox.information(window,"Info", "Process complete....!\n \n (See the "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
-                        
+                       
                         #-------------------------------------------------Step 2 ---------------------------------------------------------
                         
                         if count2>0:
@@ -394,7 +393,7 @@ class SLCadaster:
                                 QMessageBox.information(window,"Info", "Process complete....!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
                                 QMessageBox.information(window,"Info", "Warning....!\n \nYou did't select the TL. So progaramme will be terminated.")
                             else:
-                                if count1==countTL:
+                                if feats_count==countTL:
                                     QMessageBox.information(window,"Info", "Process complete....!\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report01.txt file in your DXF folder)")
 
                                     QMessageBox.information(window,"Info", "Great job ....!\n \n Unloted polygon not available,\n \n Now check the extent difference with TL")                                   
@@ -461,7 +460,7 @@ class SLCadaster:
                                         window = iface.mainWindow()
                                         QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
                                 else:
-                                    diff=str(countTL-count1)
+                                    diff=str(countTL-feats_count)
                                     QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n\n - - - - - - - - - - - Hint - - - - - - - - - \nYou may have use some boundry lines in wrong layer or dange error(check topology)  \n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
                                     cLayer = self.iface.mapCanvas().currentLayer()
                                     cLayer.removeSelection()
@@ -510,7 +509,7 @@ class SLCadaster:
                                     window = iface.mainWindow()
                                     QMessageBox.information(window,"Info", "Process complete....!\n \nNumber of "+str(count)+" extent differences found \n \nRe-checke the extent in your TL\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)\n \n             ~~~  R&D - SGO ~~~")
 
-                        
-							
+                            
+                                                            
             pass
  
