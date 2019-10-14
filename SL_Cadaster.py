@@ -222,7 +222,7 @@ class SLCadaster:
             layer = QgsVectorLayer(outputs_QGISEXPLODELINES_1['OUTPUT'],'CM_Lot', 'ogr')
             QgsMapLayerRegistry.instance().addMapLayer(layer)                        
             cLayer = iface.mapCanvas().currentLayer()                            
-            expr = QgsExpression( "SubClasses='AcDbEntity:AcDbMInsertBlock' or SubClasses='AcDbEntity:AcDbBlockReference'" )
+            expr = QgsExpression( "SubClasses='AcDbEntity:AcDbMInsertBlock'" or "SubClasses='AcDbEntity:AcDbBlockReference'" )
             it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
             ids = [i.id() for i in it]
             cLayer.setSelectedFeatures( ids )
@@ -286,7 +286,7 @@ class SLCadaster:
                     count_LOTNO_Layer=len(ids)
                    
                     if count_LOTNO_Layer==0:
-                        QMessageBox.information(window,"Info", "Warning...!!!\n \nMissing the 'LOTNO' layer \n             or  \nextra points in the layout view\n\n - - - - - - - - - - - Hint - - - - - - - - - \n \nPlease create the 'LOTNO' layer and remove the layouts and redo the process.")
+                        QMessageBox.information(window,"Info", "Warning...!!!\n \n1.Missing the 'LOTNO' layer or\n2.Blocks in the plan or\n3.Blocks in the layout view\n\n - - - - - - - - - - - Hint - - - - - - - - - \n \n1.Please create the 'LOTNO' layer\n2.Explode the plan and match that layers \n3.Remove the layout layers\nThen redo the process.")
                     else:                    
                         expr = QgsExpression( " \"Layer\" is not 'LOTNO'" )
                         it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
