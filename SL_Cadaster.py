@@ -399,6 +399,7 @@ class SLCadaster:
                                     QMessageBox.information(window,"Info", "Great job ....!\n \n Unloted polygon not available,\n \n Now check the extent difference with TL")                                   
                                     cLayer = self.iface.mapCanvas().currentLayer()
                                     cLayer.removeSelection()
+                                    result = r"C:\Users\Survey Department\Desktop\nildandahinna\result.shp"
                                     outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
                                     outputs_QGISDEFINECURRENTPROJECTION_1=processing.runalg('qgis:definecurrentprojection', outputs_QGISDISSOLVE_1['OUTPUT'],'EPSG:5235')
                                     outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDEFINECURRENTPROJECTION_1['OUTPUT'],'farea',0,10.0,3.0,True,'$area',None)
@@ -464,8 +465,44 @@ class SLCadaster:
                                     QMessageBox.information(window,"Info", "Warning ....!\n \nNumber of "+diff+" polygons missing in the plan\n\n - - - - - - - - - - - Hint - - - - - - - - - \nYou may have use some boundry lines in wrong layer or dange error(check topology)  \n \nBut extent difference lots with TL will help you to find that places\n \n(See "+os.path.basename(line_Dxf[:-4])+"Report02.txt file in your DXF folder)")
                                     cLayer = self.iface.mapCanvas().currentLayer()
                                     cLayer.removeSelection()
+				    result=r"C:\Users\Survey Department\Desktop\nildandahinna\result.shp"
                                     outputs_QGISDISSOLVE_1=processing.runalg('qgis:dissolve', cLayer,False,'Text',None)
                                     outputs_QGISDEFINECURRENTPROJECTION_1=processing.runalg('qgis:definecurrentprojection', outputs_QGISDISSOLVE_1['OUTPUT'],'EPSG:5235')
+
+                                    outputs_QGISPOINTSLAYERFROMTABLE_a=processing.runalg('qgis:pointslayerfromtable', TL,'a','b','EPSG:5235',None)
+                                    outputs_QGISJOINATTRIBUTESTABLE_b=processing.runalg('qgis:joinattributestable', outputs_QGISPOINTSLAYERFROMTABLE_a['OUTPUT'],outputs_QGISDEFINECURRENTPROJECTION_1['OUTPUT'],'LotNo','Text',None)
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    layer = QgsVectorLayer(outputs_QGISJOINATTRIBUTESTABLE_b['OUTPUT_LAYER'],"ExError", 'ogr')
+                                    QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    expr = QgsExpression("Text is not Null")
+                                    it = cLayer.getFeatures( QgsFeatureRequest( expr ) )
+                                    ids = [i.id() for i in it]
+                                    cLayer.setSelectedFeatures( ids )
+                                    cLayer.startEditing()
+                                    for fid in ids:
+                                        cLayer.deleteFeature(fid)
+                                    cLayer.commitChanges()
+                                    x= r""+TL[:-5]+"Missing lot numbers.txt"
+                                    file = open(x, 'w')
+                                    file.write('----------Report of Missing lot numbers-------"\n')
+                                    file.write('\nLot Numbers\n') 
+                                    feats = []
+                                    cLayer = iface.mapCanvas().currentLayer()
+                                    for feat in cLayer.getFeatures():
+                                        msgout = '%s\n' % (feat["LotNo"])
+                                        unicode_message = msgout.encode('utf-8')
+                                        feats.append(unicode_message)     
+                                    feats.sort()
+                                    for item in feats:
+                                        file.write(item)
+                                    file.write ('\n------------------------- R&D @ SGO ------------------------')
+                                    file.close()
+
+                                    QgsMapLayerRegistry.instance().removeMapLayer( cLayer)
+                                    window = iface.mainWindow()
+                                    QMessageBox.information(window,"Info", "Info..! \n \nTo see missing lots numbers \n \n(See "+os.path.basename(line_Dxf[:-4])+"Missing lots.txt file in your DXF folder)")
+
                                     outputs_QGISFIELDCALCULATOR_1=processing.runalg('qgis:fieldcalculator',outputs_QGISDEFINECURRENTPROJECTION_1['OUTPUT'],'farea',0,10.0,3.0,True,'$area',None)
                                     outputs_QGISJOINATTRIBUTESTABLE_1=processing.runalg('qgis:joinattributestable', outputs_QGISFIELDCALCULATOR_1['OUTPUT_LAYER'],TL,'Text','LotNo',None)
                                     outputs_QGISADDFIELDTOATTRIBUTESTABLE_1=processing.runalg('qgis:addfieldtoattributestable', outputs_QGISJOINATTRIBUTESTABLE_1['OUTPUT_LAYER'],'ex',0,10.0,0.0,None)
