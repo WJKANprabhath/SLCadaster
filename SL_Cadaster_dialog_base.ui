@@ -106,7 +106,7 @@
     </font>
    </property>
    <property name="text">
-    <string>SL Cadaster-V0.1</string>
+    <string>SL Cadaster-V0.2</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_7">
