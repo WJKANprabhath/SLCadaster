@@ -179,7 +179,7 @@ class SLCadaster:
         icon_path = ':/plugins/SLCadaster/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'SL Cadaster V0.1'),
+            text=self.tr(u'SL Cadaster V0.2'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
